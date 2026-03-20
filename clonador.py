@@ -147,7 +147,6 @@ async def handler(event):
     except Exception as e:
         print("❌ Erro:", e)
 
-print("🚀 SISTEMA COMPLETO RODANDO...")
 async def main():
     print("🚀 SISTEMA COMPLETO RODANDO...")
     await client.start()
