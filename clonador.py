@@ -148,5 +148,10 @@ async def handler(event):
         print("❌ Erro:", e)
 
 print("🚀 SISTEMA COMPLETO RODANDO...")
-client.start()
-client.run_until_disconnected()
+async def main():
+    print("🚀 SISTEMA COMPLETO RODANDO...")
+    await client.start()
+    await client.run_until_disconnected()
+
+import asyncio
+asyncio.run(main())
