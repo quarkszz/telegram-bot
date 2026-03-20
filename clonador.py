@@ -5,13 +5,14 @@ import requests
 import hashlib
 import time
 
-api_id = 35640192
-api_hash = '524c7bb51f9f8f01c22edd275fff4692'
+import os
 
-# 🔑 API AliExpress
-APP_KEY = "530014"
-APP_SECRET = "2L9VRcfhMQWNkkN2ZY14zOrbPR5PuVs2"
-TRACKING_ID = "quarkszz"
+api_id = int(os.getenv("API_ID"))
+api_hash = os.getenv("API_HASH")
+
+APP_KEY = os.getenv("APP_KEY")
+APP_SECRET = os.getenv("APP_SECRET")
+TRACKING_ID = os.getenv("TRACKING_ID")
 
 # 📡 canais de origem
 source_channels = [
