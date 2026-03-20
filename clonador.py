@@ -147,10 +147,14 @@ async def handler(event):
     except Exception as e:
         print("❌ Erro:", e)
 
+import asyncio
+
 async def main():
-    print("🚀 SISTEMA COMPLETO RODANDO...")
-    await client.start()
+    print("🚀 Iniciando...")
+
+    await client.start(phone=lambda: input("Digite seu número: "))
+    
+    print("✅ Logado com sucesso!")
     await client.run_until_disconnected()
 
-import asyncio
 asyncio.run(main())
