@@ -18,6 +18,7 @@ TRACKING_ID = os.getenv("TRACKING_ID")
 source_channels = [
     'https://t.me/pcdofafapromo',
     'https://t.me/SetupHumilde',
+    'https://t.me/zFinnY',
     'https://t.me/Fraguas84Oficial'
 ]
 
