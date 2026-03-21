@@ -1,94 +1,53 @@
 from telethon import TelegramClient, events, Button
 import re
 import asyncio
-import requests
-import hashlib
-import time
+import urllib.parse
 
-import os
+# 🔑 SUAS INFORMAÇÕES (ALTERE AQUI)
+api_id = 35640192
+api_hash = '524c7bb51f9f8f01c22edd275fff4692'
 
-api_id = int(os.getenv("API_ID"))
-api_hash = os.getenv("API_HASH")
+TRACKING_ID = "quarkszz"
 
-APP_KEY = os.getenv("APP_KEY")
-APP_SECRET = os.getenv("APP_SECRET")
-TRACKING_ID = os.getenv("TRACKING_ID")
-
-# 📡 canais de origem
+# 📡 CANAIS DE ORIGEM
 source_channels = [
     'https://t.me/pcdofafapromo',
     'https://t.me/SetupHumilde',
-    'https://t.me/zFinnY',
     'https://t.me/Fraguas84Oficial'
 ]
 
-# 📤 seu canal
+# 📤 SEU CANAL
 target_channel = 'https://t.me/quarkszzz'
 
 client = TelegramClient('session', api_id, api_hash)
 
 mensagens_enviadas = set()
 
-# 🔎 extrair link
+# 🔗 GERAR LINK AFILIADO (DEEP LINK)
+def gerar_link_afiliado(link):
+    try:
+        if "aliexpress" in link:
+            encoded_link = urllib.parse.quote(link, safe='')
+            return f"https://s.click.aliexpress.com/deep_link.htm?dl_target_url={encoded_link}&aff_short_key={TRACKING_ID}"
+        return link
+    except:
+        return link
+
+# 🔎 EXTRAIR LINK
 def extrair_link(texto):
     if not texto:
         return None
 
     links = re.findall(r'(https?://[^\s]+)', texto)
+    return links[0] if links else None
 
-    if not links:
-        return None
+# 🧹 LIMPAR TEXTO
+def limpar_texto(texto):
+    texto = re.sub(r'https?://\S+', '', texto)  # remove links
+    texto = re.sub(r'@\w+', '', texto)         # remove @canais
+    return texto.strip()
 
-    return links[0]
-
-# 🔐 assinatura API
-def gerar_assinatura(params):
-    base = APP_SECRET
-    for k in sorted(params.keys()):
-        base += k + str(params[k])
-    base += APP_SECRET
-    return hashlib.md5(base.encode()).hexdigest().upper()
-
-# 💰 gerar link afiliado REAL
-def gerar_link_afiliado(link):
-    url = "https://api-sg.aliexpress.com/sync"
-
-    params = {
-        "app_key": APP_KEY,
-        "method": "aliexpress.affiliate.link.generate",
-        "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
-        "tracking_id": TRACKING_ID,
-        "promotion_link_type": "0",
-        "source_values": link,
-        "sign_method": "md5"
-    }
-
-    params["sign"] = gerar_assinatura(params)
-
-    try:
-        response = requests.get(url, params=params)
-        data = response.json()
-
-        print("🔍 API RESPONSE:", data)
-
-        # 🔥 valida tudo antes de acessar
-        if "aliexpress_affiliate_link_generate_response" in data:
-            result = data["aliexpress_affiliate_link_generate_response"]
-
-            if "resp_result" in result and "result" in result["resp_result"]:
-                links = result["resp_result"]["result"].get("promotion_links", [])
-
-                if links:
-                    return links[0].get("promotion_link", link)
-
-        # fallback
-        return link
-
-    except Exception as e:
-        print("❌ Erro API:", e)
-        return link
-
-# 🎯 filtro
+# 🎯 FILTRO (opcional)
 def eh_promocao(texto):
     if not texto:
         return False
@@ -96,10 +55,15 @@ def eh_promocao(texto):
     palavras = ["R$", "promo", "desconto", "oferta", "%", "🔥"]
     return any(p.lower() in texto.lower() for p in palavras)
 
+# 📩 MONITORAR MENSAGENS
 @client.on(events.NewMessage(chats=source_channels))
 async def handler(event):
     mensagem = event.message.text
 
+    if not mensagem:
+        return
+
+    # (opcional) filtrar promoções
     if not eh_promocao(mensagem):
         return
 
@@ -107,19 +71,21 @@ async def handler(event):
         return
 
     link = extrair_link(mensagem)
+
     if not link:
+        print("❌ Sem link, ignorado")
         return
 
     mensagens_enviadas.add(mensagem)
 
-   link_afiliado = gerar_link_afiliado(link)
+    link_afiliado = gerar_link_afiliado(link)
 
-if not link_afiliado:
-    link_afiliado = link
+    if not link_afiliado:
+        link_afiliado = link
 
-    texto_limpo = re.sub(r'https?://\S+', '', mensagem)  # remove links
-texto_limpo = re.sub(r'@\w+', '', texto_limpo)       # remove @menções
-texto_limpo = texto_limpo.strip()
+    print("🔗 LINK FINAL:", link_afiliado)
+
+    texto_limpo = limpar_texto(mensagem)
 
     msg_final = f"""🔥 *SUPER OFERTA!*
 
@@ -133,35 +99,34 @@ texto_limpo = texto_limpo.strip()
 🔔 @quarkszzz
 """
 
-{texto_limpo}
+   msg_final = f"""🔥 *SUPER OFERTA!*
 
-💰 Aproveite agora:
-👇 Clique no botão abaixo"""
+🛍️ {texto_limpo}
 
-    try:
-        await asyncio.sleep(4)
+💰 *Melhor preço encontrado!*
+⚡ Aproveite antes que suba!
 
-        await client.send_message(
-            target_channel,
-            msg_final,
-            file=event.message.media,
-            buttons = [[Button.url("🛒 COMPRAR AGORA", link_afiliado)]],
-            parse_mode='markdown'
-        )
+🔗 {link_afiliado}
 
-        print("💰 Enviado com afiliado!")
+🔔 @quarkszzz
+"""
+
+await client.send_message(
+    target_channel,
+    msg_final,
+    file=event.message.media,
+    parse_mode='markdown'
+)
+        print("💰 Enviado com sucesso!")
 
     except Exception as e:
-        print("❌ Erro:", e)
+        print("❌ Erro ao enviar:", e)
 
-import asyncio
-
+# 🚀 INICIAR BOT
 async def main():
-    print("🚀 Iniciando...")
+    print("🚀 SISTEMA RODANDO 24H...")
 
-    await client.start(phone=lambda: input("Digite seu número: "))
-    
-    print("✅ Logado com sucesso!")
+    await client.start()
     await client.run_until_disconnected()
 
 asyncio.run(main())
