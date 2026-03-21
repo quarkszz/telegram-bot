@@ -44,11 +44,12 @@ def gerar_link_afiliado(link):
                 return f"{link}{separador}tag={AMAZON_TAG}"
             return link
 
-        # 🔵 Mercado Livre (sem afiliado direto fácil)
+        # 🔵 Mercado Livre (AFILIADO)
         if "mercadolivre" in link or "meli" in link:
-            return link
+            encoded = urllib.parse.quote(link, safe='')
+            return f"https://mercadolivre.com.br/social/qr20260320161009{encoded}"
 
-        # 🌐 outros sites
+        # 🌐 outros
         return link
 
     except Exception as e:
