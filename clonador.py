@@ -130,13 +130,16 @@ if not link_afiliado:
 texto_limpo = re.sub(r'@\w+', '', texto_limpo)       # remove @menções
 texto_limpo = texto_limpo.strip()
 
-    msg_final = f"""🔥 *OFERTA IMPERDÍVEL!*
+    msg_final = f"""🔥 *SUPER OFERTA!*
 
 🛍️ {texto_limpo}
 
-💰 *Corre que pode acabar!*
+💰 *Melhor preço encontrado!*
+⚡ Aproveite antes que suba!
 
-👇 Garanta o seu agora:
+👇 COMPRE AGORA:
+
+🔔 @quarkszzz
 """
 
 {texto_limpo}
