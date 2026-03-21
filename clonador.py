@@ -81,7 +81,7 @@ def eh_promocao(texto):
 # 📩 MONITORAR MENSAGENS
 @client.on(events.NewMessage(chats=source_channels))
 async def handler(event):
-    mensagem = event.message.text
+    mensagem = event.message.message
 
     if not mensagem:
         return
@@ -137,7 +137,6 @@ async def handler(event):
 await client.send_message(
     target_channel,
     msg_final,
-    file=event.message.media,
     parse_mode='markdown'
 )
         print("💰 Enviado com sucesso!")
