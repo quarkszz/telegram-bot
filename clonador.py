@@ -67,6 +67,41 @@ def gerar_link_afiliado(link):
         response = requests.get(url, params=params)
         data = response.json()
 
+        print("🔍 API RESPONSE:", data)
+
+        # 🔥 valida tudo antes de acessar
+        if "aliexpress_affiliate_link_generate_response" in data:
+            result = data["aliexpress_affiliate_link_generate_response"]
+
+            if "resp_result" in result and "result" in result["resp_result"]:
+                links = result["resp_result"]["result"].get("promotion_links", [])
+
+                if links:
+                    return links[0].get("promotion_link", link)
+
+        # fallback
+        return link
+
+    except Exception as e:
+        print("❌ Erro API:", e)
+        return link
+
+    params = {
+        "app_key": APP_KEY,
+        "method": "aliexpress.affiliate.link.generate",
+        "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
+        "tracking_id": TRACKING_ID,
+        "promotion_link_type": "0",
+        "source_values": link,
+        "sign_method": "md5"
+    }
+
+    params["sign"] = gerar_assinatura(params)
+
+    try:
+        response = requests.get(url, params=params)
+        data = response.json()
+
         print("🔍 Resposta API:", data)
 
         return data["aliexpress_affiliate_link_generate_response"]["resp_result"]["result"]["promotion_links"][0]["promotion_link"]
