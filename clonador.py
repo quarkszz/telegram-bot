@@ -57,12 +57,30 @@ def gerar_link_afiliado(link):
         return link
 
 # 🔎 EXTRAIR LINK
-def extrair_link(texto):
-    if not texto:
-        return None
 
-    links = re.findall(r'(https?://[^\s]+)', texto)
-    return links[0] if links else None
+print("🔎 LINK CAPTURADO:", link) 
+
+def extrair_link(event):
+    # 1. tenta pegar do texto
+    if event.message.message:
+        links = re.findall(r'(https?://[^\s]+)', event.message.message)
+        if links:
+            return links[0]
+
+    # 2. tenta pegar de botões
+    if event.message.buttons:
+        for row in event.message.buttons:
+            for button in row:
+                if hasattr(button, 'url') and button.url:
+                    return button.url
+
+    # 3. tenta pegar de entidades (links escondidos)
+    if event.message.entities:
+        for ent in event.message.entities:
+            if hasattr(ent, 'url') and ent.url:
+                return ent.url
+
+    return None
 
 # 🧹 LIMPAR TEXTO
 def limpar_texto(texto):
@@ -93,7 +111,7 @@ async def handler(event):
     if mensagem in mensagens_enviadas:
         return
 
-    link = extrair_link(mensagem)
+  link = extrair_link(event)
 
     if not link:
         print("❌ Sem link, ignorado")
@@ -118,18 +136,6 @@ async def handler(event):
 ⚡ Aproveite antes que suba!
 
 👇 COMPRE AGORA:
-
-🔔 @quarkszzz
-"""
-
-   msg_final = f"""🔥 *SUPER OFERTA!*
-
-🛍️ {texto_limpo}
-
-💰 *Melhor preço encontrado!*
-⚡ Aproveite antes que suba!
-
-🔗 {link_afiliado}
 
 🔔 @quarkszzz
 """
