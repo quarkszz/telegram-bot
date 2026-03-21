@@ -121,7 +121,10 @@ async def handler(event):
 
     mensagens_enviadas.add(mensagem)
 
-    link_afiliado = gerar_link_afiliado(link)
+   link_afiliado = gerar_link_afiliado(link)
+
+if not link_afiliado:
+    link_afiliado = link
 
     texto_limpo = re.sub(r'https?://\S+', '', mensagem).strip()
 
