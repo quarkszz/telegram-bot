@@ -126,7 +126,9 @@ async def handler(event):
 if not link_afiliado:
     link_afiliado = link
 
-    texto_limpo = re.sub(r'https?://\S+', '', mensagem).strip()
+    texto_limpo = re.sub(r'https?://\S+', '', mensagem)  # remove links
+texto_limpo = re.sub(r'@\w+', '', texto_limpo)       # remove @menções
+texto_limpo = texto_limpo.strip()
 
     msg_final = f"""🔥 *OFERTA ENCONTRADA!*
 
