@@ -1,17 +1,15 @@
-# 🔑 AFILIADOS
-ALIEXPRESS_ID = "quarkszz"
-AMAZON_TAG = "quarkszz-20"
-
-from telethon import TelegramClient, events, Button
+from telethon import TelegramClient, events
 import re
 import asyncio
 import urllib.parse
 
-# 🔑 SUAS INFORMAÇÕES (ALTERE AQUI)
+# 🔑 AFILIADOS
+ALIEXPRESS_ID = "quarkszz"
+AMAZON_TAG = "quarkszz-20"
+
+# 🔑 TELEGRAM
 api_id = 35640192
 api_hash = '524c7bb51f9f8f01c22edd275fff4692'
-
-TRACKING_ID = "quarkszz"
 
 # 📡 CANAIS DE ORIGEM
 source_channels = [
@@ -20,61 +18,44 @@ source_channels = [
     'https://t.me/Fraguas84Oficial'
 ]
 
-# 📤 SEU CANAL
+# 📤 DESTINO
 target_channel = 'https://t.me/quarkszzz'
 
 client = TelegramClient('session', api_id, api_hash)
 
 mensagens_enviadas = set()
 
-# 🔗 GERAR LINK AFILIADO (DEEP LINK)
-import urllib.parse
-
+# 🔗 GERAR LINK AFILIADO
 def gerar_link_afiliado(link):
     try:
-        # 🟠 AliExpress
         if "aliexpress" in link:
             encoded = urllib.parse.quote(link, safe='')
             return f"https://s.click.aliexpress.com/deep_link.htm?dl_target_url={encoded}&aff_short_key={ALIEXPRESS_ID}"
 
-        # 🟡 Amazon
         if "amazon" in link:
             if "tag=" not in link:
                 separador = "&" if "?" in link else "?"
                 return f"{link}{separador}tag={AMAZON_TAG}"
             return link
 
-        # 🔵 Mercado Livre (AFILIADO)
-        if "mercadolivre" in link or "meli" in link:
-            encoded = urllib.parse.quote(link, safe='')
-            return f"https://mercadolivre.com.br/social/qr20260320161009{encoded}"
-
-        # 🌐 outros
         return link
 
-    except Exception as e:
-        print("Erro afiliado:", e)
+    except:
         return link
 
-# 🔎 EXTRAIR LINK
-
-print("🔎 LINK CAPTURADO:", link) 
-
+# 🔎 EXTRAIR LINK (FORTE)
 def extrair_link(event):
-    # 1. tenta pegar do texto
     if event.message.message:
         links = re.findall(r'(https?://[^\s]+)', event.message.message)
         if links:
             return links[0]
 
-    # 2. tenta pegar de botões
     if event.message.buttons:
         for row in event.message.buttons:
-            for button in row:
-                if hasattr(button, 'url') and button.url:
-                    return button.url
+            for btn in row:
+                if btn.url:
+                    return btn.url
 
-    # 3. tenta pegar de entidades (links escondidos)
     if event.message.entities:
         for ent in event.message.entities:
             if hasattr(ent, 'url') and ent.url:
@@ -84,19 +65,11 @@ def extrair_link(event):
 
 # 🧹 LIMPAR TEXTO
 def limpar_texto(texto):
-    texto = re.sub(r'https?://\S+', '', texto)  # remove links
-    texto = re.sub(r'@\w+', '', texto)         # remove @canais
+    texto = re.sub(r'https?://\S+', '', texto)
+    texto = re.sub(r'@\w+', '', texto)
     return texto.strip()
 
-# 🎯 FILTRO (opcional)
-def eh_promocao(texto):
-    if not texto:
-        return False
-
-    palavras = ["R$", "promo", "desconto", "oferta", "%", "🔥"]
-    return any(p.lower() in texto.lower() for p in palavras)
-
-# 📩 MONITORAR MENSAGENS
+# 📩 HANDLER
 @client.on(events.NewMessage(chats=source_channels))
 async def handler(event):
     mensagem = event.message.message
@@ -104,25 +77,20 @@ async def handler(event):
     if not mensagem:
         return
 
-    # (opcional) filtrar promoções
-    if not eh_promocao(mensagem):
-        return
-
     if mensagem in mensagens_enviadas:
         return
 
-  link = extrair_link(event)
+    link = extrair_link(event)
+
+    print("🔎 LINK CAPTURADO:", link)
 
     if not link:
-        print("❌ Sem link, ignorado")
+        print("❌ Sem link")
         return
 
     mensagens_enviadas.add(mensagem)
 
     link_afiliado = gerar_link_afiliado(link)
-
-    if not link_afiliado:
-        link_afiliado = link
 
     print("🔗 LINK FINAL:", link_afiliado)
 
@@ -135,25 +103,26 @@ async def handler(event):
 💰 *Melhor preço encontrado!*
 ⚡ Aproveite antes que suba!
 
-👇 COMPRE AGORA:
+🔗 {link_afiliado}
 
 🔔 @quarkszzz
 """
 
-await client.send_message(
-    target_channel,
-    msg_final,
-    parse_mode='markdown'
-)
+    try:
+        await client.send_message(
+            target_channel,
+            msg_final,
+            parse_mode='markdown'
+        )
+
         print("💰 Enviado com sucesso!")
 
     except Exception as e:
-        print("❌ Erro ao enviar:", e)
+        print("❌ Erro:", e)
 
-# 🚀 INICIAR BOT
+# 🚀 START
 async def main():
-    print("🚀 SISTEMA RODANDO 24H...")
-
+    print("🚀 RODANDO 24H...")
     await client.start()
     await client.run_until_disconnected()
 
