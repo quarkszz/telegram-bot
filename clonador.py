@@ -33,11 +33,13 @@ mensagens_enviadas = set()
 def extrair_link(texto):
     if not texto:
         return None
-    links = re.findall(r'https?://\S+', texto)
-    for link in links:
-        if "aliexpress" in link:
-            return link
-    return None
+
+    links = re.findall(r'(https?://[^\s]+)', texto)
+
+    if not links:
+        return None
+
+    return links[0]
 
 # 🔐 assinatura API
 def gerar_assinatura(params):
