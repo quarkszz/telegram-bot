@@ -130,7 +130,14 @@ if not link_afiliado:
 texto_limpo = re.sub(r'@\w+', '', texto_limpo)       # remove @menções
 texto_limpo = texto_limpo.strip()
 
-    msg_final = f"""🔥 *OFERTA ENCONTRADA!*
+    msg_final = f"""🔥 *OFERTA IMPERDÍVEL!*
+
+🛍️ {texto_limpo}
+
+💰 *Corre que pode acabar!*
+
+👇 Garanta o seu agora:
+"""
 
 {texto_limpo}
 
@@ -144,7 +151,7 @@ texto_limpo = texto_limpo.strip()
             target_channel,
             msg_final,
             file=event.message.media,
-            buttons=[[Button.url("🛒 COMPRAR AGORA", link_afiliado)]],
+            buttons = [[Button.url("🛒 COMPRAR AGORA", link_afiliado)]],
             parse_mode='markdown'
         )
 
