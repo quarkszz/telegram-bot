@@ -86,52 +86,6 @@ def gerar_link_afiliado(link):
         print("❌ Erro API:", e)
         return link
 
-    params = {
-        "app_key": APP_KEY,
-        "method": "aliexpress.affiliate.link.generate",
-        "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
-        "tracking_id": TRACKING_ID,
-        "promotion_link_type": "0",
-        "source_values": link,
-        "sign_method": "md5"
-    }
-
-    params["sign"] = gerar_assinatura(params)
-
-    try:
-        response = requests.get(url, params=params)
-        data = response.json()
-
-        print("🔍 Resposta API:", data)
-
-        return data["aliexpress_affiliate_link_generate_response"]["resp_result"]["result"]["promotion_links"][0]["promotion_link"]
-
-    except Exception as e:
-        print("❌ Erro API:", e)
-        return link
-
-    params = {
-        "app_key": APP_KEY,
-        "method": "aliexpress.affiliate.link.generate",
-        "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
-        "tracking_id": TRACKING_ID,
-        "promotion_link_type": "0",
-        "source_values": link,
-        "sign_method": "md5"
-    }
-
-    params["sign"] = gerar_assinatura(params)
-
-    try:
-        response = requests.get(url, params=params)
-        data = response.json()
-
-        return data["aliexpress_affiliate_link_generate_response"]["resp_result"]["result"]["promotion_links"][0]["promotion_link"]
-
-    except Exception as e:
-        print("Erro API:", e)
-        return link
-
 # 🎯 filtro
 def eh_promocao(texto):
     if not texto:
