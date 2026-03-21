@@ -1,3 +1,7 @@
+# 🔑 AFILIADOS
+ALIEXPRESS_ID = "quarkszz"
+AMAZON_TAG = "quarkszz-20"
+
 from telethon import TelegramClient, events, Button
 import re
 import asyncio
@@ -24,13 +28,31 @@ client = TelegramClient('session', api_id, api_hash)
 mensagens_enviadas = set()
 
 # 🔗 GERAR LINK AFILIADO (DEEP LINK)
+import urllib.parse
+
 def gerar_link_afiliado(link):
     try:
+        # 🟠 AliExpress
         if "aliexpress" in link:
-            encoded_link = urllib.parse.quote(link, safe='')
-            return f"https://s.click.aliexpress.com/deep_link.htm?dl_target_url={encoded_link}&aff_short_key={TRACKING_ID}"
+            encoded = urllib.parse.quote(link, safe='')
+            return f"https://s.click.aliexpress.com/deep_link.htm?dl_target_url={encoded}&aff_short_key={ALIEXPRESS_ID}"
+
+        # 🟡 Amazon
+        if "amazon" in link:
+            if "tag=" not in link:
+                separador = "&" if "?" in link else "?"
+                return f"{link}{separador}tag={AMAZON_TAG}"
+            return link
+
+        # 🔵 Mercado Livre (sem afiliado direto fácil)
+        if "mercadolivre" in link or "meli" in link:
+            return link
+
+        # 🌐 outros sites
         return link
-    except:
+
+    except Exception as e:
+        print("Erro afiliado:", e)
         return link
 
 # 🔎 EXTRAIR LINK
