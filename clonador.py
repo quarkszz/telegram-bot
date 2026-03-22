@@ -1,7 +1,7 @@
 from telethon import TelegramClient, events
+from telethon.sessions import StringSession
 import re
 import asyncio
-import urllib.parse
 import hashlib
 import requests
 from datetime import datetime
@@ -22,6 +22,11 @@ AMAZON_TAG = "quarkszz-20"
 api_id = 35640192
 api_hash = '524c7bb51f9f8f01c22edd275fff4692'
 
+# 🔥 COLE SUA STRING SESSION AQUI
+SESSION_STRING = "1AZWarzYBu2QhQjcMTGXs0IhSCLmSvb4q1M9UnbJqUcZlhwHd2CuCVyUcnWALzPszMWkbRWwGfXXMz_zM8lcR8j1jqfVfeBbMg6KuQgBx4PoaYCJ5vxdu3cH4Y7ccIELCGA5duDt0tVCs0Oe9S1YTIFldLR2o_CqTlIrIxmAOzT308QwUwSiSpQsZ8A3PsVtzpm20wyuX3Om_wbCNTUK82w5ghebXAnWE4yP1i8wVFarYkggjNNvizHB3jZEx_VhsEsXUvHlHO4py-RZatCwqWovqFlFHOj8Mq5soaWIs9gj379EnFOLH8ASjdxLK6wVBoKQmRVtjd9AcBRK62akboNldixH2aBY="
+
+client = TelegramClient(StringSession(SESSION_STRING), api_id, api_hash)
+
 # ==============================
 # 📡 CANAIS DE ORIGEM
 # ==============================
@@ -38,9 +43,8 @@ source_channels = [
 
 target_channel = 'https://t.me/quarkszzz'
 
-client = TelegramClient('session', api_id, api_hash)
-
-mensagens_enviadas = set()
+# evita spam de link repetido
+links_processados = set()
 
 # ==============================
 # 🔐 GERAR SIGN
@@ -57,7 +61,7 @@ def gerar_sign(params, app_secret):
     return hashlib.md5(base_string.encode('utf-8')).hexdigest().upper()
 
 # ==============================
-# 🔍 EXPANDIR LINK (ESSENCIAL)
+# 🔍 EXPANDIR LINK
 # ==============================
 
 def expandir_link(link):
@@ -106,14 +110,11 @@ def gerar_link_aliexpress_api(link_original):
 
 def gerar_link_afiliado(link):
     try:
-        # 🔥 EXPANDE PRIMEIRO (corrige link roubado)
         link = expandir_link(link)
 
-        # AliExpress
         if "aliexpress" in link:
             return gerar_link_aliexpress_api(link)
 
-        # Amazon
         if "amazon" in link:
             if "tag=" not in link:
                 separador = "&" if "?" in link else "?"
@@ -141,11 +142,6 @@ def extrair_link(event):
                 if btn.url:
                     return btn.url
 
-    if event.message.entities:
-        for ent in event.message.entities:
-            if hasattr(ent, 'url') and ent.url:
-                return ent.url
-
     return None
 
 # ==============================
@@ -171,20 +167,19 @@ async def handler(event):
         if not mensagem:
             return
 
-        if mensagem in mensagens_enviadas:
-            return
-
         link = extrair_link(event)
 
         print("🔎 LINK CAPTURADO:", link)
 
         if not link:
-            print("❌ Sem link")
             return
 
-        mensagens_enviadas.add(mensagem)
+        # evita repetir link
+        if link in links_processados:
+            return
 
-        # 🔗 gerar afiliado
+        links_processados.add(link)
+
         link_afiliado = gerar_link_afiliado(link)
 
         print("🔗 LINK FINAL:", link_afiliado)
@@ -203,7 +198,7 @@ async def handler(event):
 🔔 @quarkszzz
 """
 
-        # 🔥 ENVIO COM IMAGEM (SE TIVER)
+        # envia com imagem se tiver
         if event.message.photo:
             await client.send_file(
                 target_channel,
@@ -220,25 +215,28 @@ async def handler(event):
 
         print("💰 Enviado com sucesso!")
 
-        await asyncio.sleep(1)  # evita spam / limite
+        await asyncio.sleep(2)
 
     except Exception as e:
         print("💥 ERRO NO HANDLER:", e)
 
 # ==============================
-# 🚀 START
+# 🚀 LOOP INFINITO (ANTI-QUEDA)
 # ==============================
 
 async def main():
-    print("🚀 BOT RODANDO 24H...")
+    while True:
+        try:
+            print("🚀 BOT RODANDO 24H...")
 
-    try:
-        await client.start()
-        print("✅ Conectado no Telegram")
+            await client.start()
+            print("✅ Conectado no Telegram")
 
-        await client.run_until_disconnected()
+            await client.run_until_disconnected()
 
-    except Exception as e:
-        print("💥 ERRO CRÍTICO:", e)
+        except Exception as e:
+            print("💥 ERRO:", e)
+            print("🔁 Reiniciando em 5 segundos...")
+            await asyncio.sleep(5)
 
 asyncio.run(main())
