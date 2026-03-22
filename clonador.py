@@ -35,6 +35,7 @@ source_channels = [
     'https://t.me/pcdofafapromo',
     'https://t.me/SetupHumilde',
     'https://t.me/Fraguas84Oficial'
+    'https://t.me/zFinnY'
 ]
 
 # ==============================
