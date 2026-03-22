@@ -10,15 +10,13 @@ from datetime import datetime
 # 🔑 AFILIADOS
 # ==============================
 
-# AliExpress API (PEGAR NO PORTAL PORTALS)
 APP_KEY = "530014"
 APP_SECRET = "2L9VRcfhMQWNkkN2ZY14zOrbPR5PuVs2"
 
-# Amazon
-AMAZON_TAG = "quarkszz-20"  # já está certo
+AMAZON_TAG = "quarkszz-20"
 
 # ==============================
-# 🔑 TELEGRAM (JÁ PREENCHIDO)
+# 🔑 TELEGRAM
 # ==============================
 
 api_id = 35640192
@@ -35,7 +33,7 @@ source_channels = [
 ]
 
 # ==============================
-# 📤 CANAL DESTINO
+# 📤 DESTINO
 # ==============================
 
 target_channel = 'https://t.me/quarkszzz'
@@ -45,7 +43,7 @@ client = TelegramClient('session', api_id, api_hash)
 mensagens_enviadas = set()
 
 # ==============================
-# 🔐 GERAR SIGN (API ALIEXPRESS)
+# 🔐 GERAR SIGN
 # ==============================
 
 def gerar_sign(params, app_secret):
@@ -56,11 +54,22 @@ def gerar_sign(params, app_secret):
         base_string += f"{k}{v}"
     base_string += app_secret
 
-    sign = hashlib.md5(base_string.encode('utf-8')).hexdigest().upper()
-    return sign
+    return hashlib.md5(base_string.encode('utf-8')).hexdigest().upper()
 
 # ==============================
-# 🌐 GERAR LINK ALIEXPRESS (API REAL)
+# 🔍 EXPANDIR LINK (ESSENCIAL)
+# ==============================
+
+def expandir_link(link):
+    try:
+        response = requests.get(link, allow_redirects=True, timeout=5)
+        print("🔄 LINK EXPANDIDO:", response.url)
+        return response.url
+    except:
+        return link
+
+# ==============================
+# 🌐 ALIEXPRESS API
 # ==============================
 
 def gerar_link_aliexpress_api(link_original):
@@ -92,12 +101,15 @@ def gerar_link_aliexpress_api(link_original):
         return link_original
 
 # ==============================
-# 🔗 GERAR LINK AFILIADO (GERAL)
+# 🔗 GERAR LINK AFILIADO
 # ==============================
 
 def gerar_link_afiliado(link):
     try:
-        # AliExpress (API oficial)
+        # 🔥 EXPANDE PRIMEIRO (corrige link roubado)
+        link = expandir_link(link)
+
+        # AliExpress
         if "aliexpress" in link:
             return gerar_link_aliexpress_api(link)
 
@@ -146,37 +158,40 @@ def limpar_texto(texto):
     return texto.strip()
 
 # ==============================
-# 📩 HANDLER PRINCIPAL
+# 📩 HANDLER
 # ==============================
 
 @client.on(events.NewMessage(chats=source_channels))
 async def handler(event):
-    mensagem = event.message.message
+    try:
+        print("📩 Nova mensagem detectada")
 
-    if not mensagem:
-        return
+        mensagem = event.message.message
 
-    if mensagem in mensagens_enviadas:
-        return
+        if not mensagem:
+            return
 
-    link = extrair_link(event)
+        if mensagem in mensagens_enviadas:
+            return
 
-    print("🔎 LINK CAPTURADO:", link)
+        link = extrair_link(event)
 
-    if not link:
-        print("❌ Sem link")
-        return
+        print("🔎 LINK CAPTURADO:", link)
 
-    mensagens_enviadas.add(mensagem)
+        if not link:
+            print("❌ Sem link")
+            return
 
-    # 🔗 gerar afiliado
-    link_afiliado = gerar_link_afiliado(link)
+        mensagens_enviadas.add(mensagem)
 
-    print("🔗 LINK FINAL:", link_afiliado)
+        # 🔗 gerar afiliado
+        link_afiliado = gerar_link_afiliado(link)
 
-    texto_limpo = limpar_texto(mensagem)
+        print("🔗 LINK FINAL:", link_afiliado)
 
-    msg_final = f"""🔥 *SUPER OFERTA!*
+        texto_limpo = limpar_texto(mensagem)
+
+        msg_final = f"""🔥 *SUPER OFERTA!*
 
 🛍️ {texto_limpo}
 
@@ -188,17 +203,27 @@ async def handler(event):
 🔔 @quarkszzz
 """
 
-    try:
-        await client.send_message(
-            target_channel,
-            msg_final,
-            parse_mode='markdown'
-        )
+        # 🔥 ENVIO COM IMAGEM (SE TIVER)
+        if event.message.photo:
+            await client.send_file(
+                target_channel,
+                file=event.message.photo,
+                caption=msg_final,
+                parse_mode='markdown'
+            )
+        else:
+            await client.send_message(
+                target_channel,
+                msg_final,
+                parse_mode='markdown'
+            )
 
         print("💰 Enviado com sucesso!")
 
+        await asyncio.sleep(1)  # evita spam / limite
+
     except Exception as e:
-        print("❌ Erro:", e)
+        print("💥 ERRO NO HANDLER:", e)
 
 # ==============================
 # 🚀 START
@@ -206,7 +231,14 @@ async def handler(event):
 
 async def main():
     print("🚀 BOT RODANDO 24H...")
-    await client.start()
-    await client.run_until_disconnected()
+
+    try:
+        await client.start()
+        print("✅ Conectado no Telegram")
+
+        await client.run_until_disconnected()
+
+    except Exception as e:
+        print("💥 ERRO CRÍTICO:", e)
 
 asyncio.run(main())
